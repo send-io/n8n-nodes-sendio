@@ -1,0 +1,48 @@
+{
+	"name": "send.io: create a contact and record an event",
+	"nodes": [
+		{
+			"parameters": {},
+			"name": "When clicking Execute",
+			"type": "n8n-nodes-base.manualTrigger",
+			"typeVersion": 1,
+			"position": [0, 0]
+		},
+		{
+			"parameters": {
+				"resource": "contact",
+				"operation": "create",
+				"email": "ada@example.com",
+				"additionalFields": {
+					"firstName": "Ada",
+					"lastName": "Lovelace",
+					"properties": "{\"plan\": \"pro\"}"
+				}
+			},
+			"name": "Create Contact",
+			"type": "n8n-nodes-sendio.sendIo",
+			"typeVersion": 1,
+			"position": [240, 0]
+		},
+		{
+			"parameters": {
+				"resource": "event",
+				"operation": "send",
+				"event": "order.paid",
+				"identifyBy": "email",
+				"email": "ada@example.com",
+				"payload": "{\"amount\": 42, \"currency\": \"USD\"}",
+				"eventId": "={{ 'order-' + $now.toMillis() }}"
+			},
+			"name": "Send Custom Event",
+			"type": "n8n-nodes-sendio.sendIo",
+			"typeVersion": 1,
+			"position": [480, 0]
+		}
+	],
+	"connections": {
+		"When clicking Execute": { "main": [[{ "node": "Create Contact", "type": "main", "index": 0 }]] },
+		"Create Contact": { "main": [[{ "node": "Send Custom Event", "type": "main", "index": 0 }]] }
+	},
+	"settings": { "executionOrder": "v1" }
+}

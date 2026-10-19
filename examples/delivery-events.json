@@ -1,0 +1,61 @@
+{
+	"name": "send.io: react to delivery events",
+	"nodes": [
+		{
+			"parameters": {
+				"source": "managed",
+				"events": ["email.delivered", "email.bounced", "email.complained"]
+			},
+			"name": "send.io Trigger",
+			"type": "n8n-nodes-sendio.sendIoTrigger",
+			"typeVersion": 1,
+			"position": [0, 0],
+			"webhookId": "replace-with-a-unique-id"
+		},
+		{
+			"parameters": {
+				"conditions": {
+					"options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+					"conditions": [
+						{
+							"id": "bounced",
+							"leftValue": "={{ $json.type }}",
+							"rightValue": "email.bounced",
+							"operator": { "type": "string", "operation": "equals" }
+						}
+					],
+					"combinator": "and"
+				},
+				"options": {}
+			},
+			"name": "Bounced?",
+			"type": "n8n-nodes-base.if",
+			"typeVersion": 2,
+			"position": [240, 0]
+		},
+		{
+			"parameters": {},
+			"name": "Handle Bounce",
+			"type": "n8n-nodes-base.noOp",
+			"typeVersion": 1,
+			"position": [480, -100]
+		},
+		{
+			"parameters": {},
+			"name": "Other Events",
+			"type": "n8n-nodes-base.noOp",
+			"typeVersion": 1,
+			"position": [480, 100]
+		}
+	],
+	"connections": {
+		"send.io Trigger": { "main": [[{ "node": "Bounced?", "type": "main", "index": 0 }]] },
+		"Bounced?": {
+			"main": [
+				[{ "node": "Handle Bounce", "type": "main", "index": 0 }],
+				[{ "node": "Other Events", "type": "main", "index": 0 }]
+			]
+		}
+	},
+	"settings": { "executionOrder": "v1" }
+}

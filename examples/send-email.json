@@ -1,0 +1,35 @@
+{
+	"name": "send.io: send an email",
+	"nodes": [
+		{
+			"parameters": {},
+			"name": "When clicking Execute",
+			"type": "n8n-nodes-base.manualTrigger",
+			"typeVersion": 1,
+			"position": [0, 0]
+		},
+		{
+			"parameters": {
+				"resource": "email",
+				"operation": "send",
+				"from": "Acme <hello@your-verified-domain.com>",
+				"to": "delivered@send.io",
+				"subject": "Welcome to Acme",
+				"bodyType": "html",
+				"html": "<p>Thanks for signing up.</p>",
+				"additionalFields": {
+					"tags": { "tag": [{ "name": "source", "value": "n8n" }] },
+					"idempotencyKey": "={{ 'welcome-' + $now.toMillis() }}"
+				}
+			},
+			"name": "Send Email",
+			"type": "n8n-nodes-sendio.sendIo",
+			"typeVersion": 1,
+			"position": [240, 0]
+		}
+	],
+	"connections": {
+		"When clicking Execute": { "main": [[{ "node": "Send Email", "type": "main", "index": 0 }]] }
+	},
+	"settings": { "executionOrder": "v1" }
+}
