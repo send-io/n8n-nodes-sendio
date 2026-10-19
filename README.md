@@ -83,7 +83,7 @@ npm run dev
 
 `npm run dev` uses the n8n node CLI: it rebuilds on change and links the node into an n8n instance. The repo's `.env` at the root holds the dev API key for the smoke scripts; inside n8n the key lives only in a credential.
 
-To rehearse a release, `npm pack` and install the tarball into `~/.n8n/nodes` with `npm install ./n8n-nodes-sendio-<version>.tgz`, then restart n8n.
+To rehearse a release, `npm pack` and install the tarball into `~/.n8n/nodes` with `npm install --legacy-peer-deps --omit=dev ./n8n-nodes-sendio-<version>.tgz` (without the flag npm also installs the n8n-workflow peer dependency, which fails on a native build), then restart n8n.
 
 ## Publishing and the mirror
 
