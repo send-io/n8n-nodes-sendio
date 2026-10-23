@@ -72,6 +72,12 @@ Observed on 19 Oct 2026 against the development API while testing this node.
 6. `POST /templates` requires `name` and `html`; `from` and `subject` are only required at publish time, with a clear message.
 7. `DELETE /domains/{id}` and `DELETE /events/{id}` need the full UUID; a prefix answers 422 or 404.
 
+Added on 23 Oct 2026 while building the Make app:
+
+8. `POST /webhooks` accepts a `headers` object that is stored, echoed in the create response and sent with every delivery. Useful for receivers that cannot recompute the svix signature.
+9. `PATCH /webhooks/{id}` answers an object whose unchanged fields are `null` (for example `events` and `headers` after a successful update); read the webhook again for the current state.
+10. `POST /hooks`-style receivers (Make) see the parsed JSON only; the Go JSON encoder escapes `<`, `>` and `&` as `<` style sequences (visible in `message_id`), so any receiver that re-serialises the body before verifying the svix signature will never match. Only receivers with the raw bytes can verify.
+
 ## Development
 
 ```bash
