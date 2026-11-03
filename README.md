@@ -107,4 +107,5 @@ After the first publish: run `npx @n8n/scan-community-package n8n-nodes-sendio`,
 
 ## Version history
 
+- 0.1.1: same code, released from GitHub Actions with provenance.
 - 0.1.0: first release, published 03 Nov 2026 from a laptop (no provenance).
