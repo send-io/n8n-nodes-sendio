@@ -93,7 +93,15 @@ To rehearse a release, `npm pack` and install the tarball into `~/.n8n/nodes` wi
 
 ## Publishing and the mirror
 
-This GitLab repository is the source of truth. Publishing to npm happens from a public GitHub mirror under the company organisation through `.github/workflows/publish.yml` on a version tag, with npm provenance, as n8n requires for verified community nodes. The mirror, the npm publish, the `@n8n/scan-community-package` check and the submission at creators.n8n.io happen once the GitHub organisation exists.
+The GitLab repository `foomonk/sendio/send-io-integrations` is the source of truth; `n8n/` there is this package. The public GitHub repository [send-io/n8n-nodes-sendio](https://github.com/send-io/n8n-nodes-sendio) is a mirror of that folder's history and the place npm publishes from, because n8n requires community nodes to be published from GitHub Actions with npm provenance. Nothing is developed on the mirror; pull requests opened there are applied on GitLab and mirrored back.
+
+To release a version:
+
+1. Bump `version` in `package.json` and `package-lock.json`, add the entry to `CHANGELOG.md` and the version history below, commit on GitLab `main`.
+2. From the repository root run `scripts/mirror-n8n.sh`. It splits the `n8n/` history with `git subtree split` and pushes it to the mirror's `main` (CI there builds and lints).
+3. Tag the release on the mirror: `scripts/mirror-n8n.sh vX.Y.Z` pushes the tag, and `.github/workflows/publish.yml` builds, lints and runs `npm publish --provenance --access public` with the repository secret `NPM_TOKEN`.
+
+After the first publish: run `npx @n8n/scan-community-package n8n-nodes-sendio`, install it by name in a clean n8n, then submit it at creators.n8n.io for verification.
 
 ## Version history
 
