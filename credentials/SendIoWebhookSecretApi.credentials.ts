@@ -11,7 +11,7 @@ export class SendIoWebhookSecretApi implements ICredentialType {
 	icon: Icon = { light: 'file:../icons/sendio.svg', dark: 'file:../icons/sendio.dark.svg' };
 
 	documentationUrl =
-		'https://github.com/sendio/n8n-nodes-sendio?tab=readme-ov-file#trigger-setup';
+		'https://github.com/send-io/n8n-nodes-sendio?tab=readme-ov-file#trigger-setup';
 
 	properties: INodeProperties[] = [
 		{
