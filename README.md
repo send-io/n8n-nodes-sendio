@@ -99,10 +99,12 @@ To release a version:
 
 1. Bump `version` in `package.json` and `package-lock.json`, add the entry to `CHANGELOG.md` and the version history below, commit on GitLab `main`.
 2. From the repository root run `scripts/mirror-n8n.sh`. It splits the `n8n/` history with `git subtree split` and pushes it to the mirror's `main` (CI there builds and lints).
-3. Tag the release on the mirror: `scripts/mirror-n8n.sh vX.Y.Z` pushes the tag, and `.github/workflows/publish.yml` builds, lints and runs `npm publish --provenance --access public` with the repository secret `NPM_TOKEN`.
+3. Tag the release on the mirror: `scripts/mirror-n8n.sh vX.Y.Z` pushes the tag, and `.github/workflows/publish.yml` builds, lints and runs `npm publish --access public`. No token is involved: the package's settings on npmjs.com (Settings, Trusted publishing) name this repository and `publish.yml` as the trusted publisher, and npm attaches the provenance itself.
+
+n8n only verifies nodes whose release came from GitHub Actions with provenance (rule since 01 May 2026), so a version published from a laptop is fine for npm but not for the verification submission.
 
 After the first publish: run `npx @n8n/scan-community-package n8n-nodes-sendio`, install it by name in a clean n8n, then submit it at creators.n8n.io for verification.
 
 ## Version history
 
-- 0.1.0: first release.
+- 0.1.0: first release, published 03 Nov 2026 from a laptop (no provenance).

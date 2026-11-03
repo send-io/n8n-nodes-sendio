@@ -1,8 +1,8 @@
 # Publishes n8n-nodes-sendio to npm when a v* tag lands on this mirror.
 # n8n requires community nodes to be published from GitHub Actions with npm
 # provenance, which is why this runs here and not from the GitLab source repo.
-# Needs the repository secret NPM_TOKEN (an npm automation token with publish
-# rights on the package).
+# No token: the package's npm settings list this repository and workflow as a
+# trusted publisher (OIDC), which also attaches provenance on its own.
 
 name: Publish
 
@@ -26,10 +26,11 @@ jobs:
           registry-url: https://registry.npmjs.org
       - name: Tag must match package.json version
         run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - run: npm install -g npm@latest # trusted publishing needs npm 11.5.1 or later
       - run: npm ci
       - run: npm run build
       - run: npm run lint
-      - run: npm publish --provenance --access public
+      - run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           RELEASE_MODE: 'true' # prepublishOnly (n8n-node prerelease) refuses to publish without it
+      - run: npx --yes @n8n/scan-community-package n8n-nodes-sendio # n8n's scanner, against what npm now serves
