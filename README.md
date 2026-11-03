@@ -78,6 +78,10 @@ Added on 23 Oct 2026 while building the Make app:
 9. `PATCH /webhooks/{id}` answers an object whose unchanged fields are `null` (for example `events` and `headers` after a successful update); read the webhook again for the current state.
 10. `POST /hooks`-style receivers (Make) see the parsed JSON only; the Go JSON encoder escapes `<`, `>` and `&` as `<` style sequences (visible in `message_id`), so any receiver that re-serialises the body before verifying the svix signature will never match. Only receivers with the raw bytes can verify.
 
+Added on 3 Nov 2026 while preparing the Make app for review:
+
+11. `PATCH /contacts/{id}` answers 422 `missing_required_field` when the body has `"properties": null` (with or without `create_missing_properties`), while `POST /contacts` accepts it. Send `{}` or leave the key out.
+
 ## Development
 
 ```bash
