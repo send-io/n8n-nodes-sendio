@@ -99,7 +99,7 @@ export const emailDescription: INodeProperties[] = [
 		required: true,
 		default: '[]',
 		description:
-			'A JSON array of email objects with the same fields as Send (from, to, subject, html or text or template, cc, bcc, reply_to, tags, headers, scheduled_at). Attachments are not allowed in a batch.',
+			'A JSON array of email objects with the same fields as Send (from, to, subject, html or text, or transactional_id with variables, cc, bcc, reply_to, tags, headers, scheduled_at). Attachments are not allowed in a batch.',
 		displayOptions: { show: { resource, operation: ['sendBatch'] } },
 	},
 	{
@@ -193,6 +193,15 @@ export const emailDescription: INodeProperties[] = [
 				type: 'string',
 				default: '',
 				routing: { send: { type: 'query', property: 'to' } },
+			},
+			{
+				displayName: 'Transactional Email ID',
+				name: 'transactionalId',
+				type: 'string',
+				default: '',
+				placeholder: 'e.g. tx_2hX9Yq1bVv0kq3W4m8sZJt1aB7c',
+				description: 'Only emails sent from this transactional email',
+				routing: { send: { type: 'query', property: 'transactional_id' } },
 			},
 		],
 	},

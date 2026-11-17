@@ -27,11 +27,12 @@ Every request carries `Authorization: Bearer <key>` and a `User-Agent: sendio-n8
 | --- | --- |
 | Email | Send, Send Batch, Get, Get Many, Update (reschedule), Cancel |
 | Domain | Create, Get, Get Many, Update, Verify, Delete |
+| Transactional Email | Get, Get Many |
 | Template | Create, Get, Get Many, Update, Publish, Duplicate, Delete |
 | Contact | Create, Get (by id or email), Get Many, Update, Delete |
 | Event | Send a custom event |
 
-Send supports HTML, text, both, or a published template with variables; cc, bcc, reply to, custom headers, tags, scheduled sending, a subscription topic, an idempotency key, and attachments from the item's binary data or from a URL. Send Batch takes a JSON array of up to 100 emails. Get Many operations have Return All with automatic paging.
+Send supports a saved transactional email with variables (recommended), HTML, text, or both; sending a published template directly is deprecated and kept only for existing workflows; cc, bcc, reply to, custom headers, tags, scheduled sending, a subscription topic, an idempotency key, and attachments from the item's binary data or from a URL. Send Batch takes a JSON array of up to 100 emails. Get Many operations have Return All with automatic paging.
 
 Errors show send.io's own message in n8n, for example `The example.com domain is not verified. Please, add and verify your domain on https://send.io/domains`.
 
@@ -40,10 +41,24 @@ Errors show send.io's own message in n8n, for example `The example.com domain is
 - Email: `examples/send-email.json` sends one email with a tag and an idempotency key.
 - Contact and Event: `examples/contact-and-event.json` creates a contact and records `order.paid` for it.
 - Domain: Create with the domain name, then Get to read the DNS records (`records` in the output), publish them, then Verify.
-- Template: Create with name and HTML (use `{{name}}` style placeholders and list them under Variables), set From and Subject, Publish, then Send an email with Body Type set to Template.
+- Template: Create with name and HTML (use `{{name}}` style placeholders and list them under Variables), set From and Subject, Publish. Then save it as a transactional email in send.io (in the dashboard or with `POST /transactional`) to send it from this node.
+- Transactional send: `examples/send-transactional.json` sends a saved transactional email with one variable and a cc.
 - Trigger: `examples/delivery-events.json` routes bounces to their own branch.
 
 Import an example through Workflows, Import from File, then pick your send.io API credential on each node.
+
+## Send a transactional email
+
+A transactional email is a published template plus a saved sender, subject, preview text, reply-to and tracking setting. Create one in send.io, then in n8n:
+
+1. Add the send.io node, Resource Email, Operation Send.
+2. Set Body Type to Transactional Email and pick it from the list (type to search by name or subject), or switch the field to By ID and enter its `tx_...` id.
+3. Fill To and put the template's variables in Variables as JSON, for example `{"CODE": "123456"}`. Run Get on the Transactional Email resource to see the variable names, types and fallback values.
+4. Optional: cc, bcc, tags, headers, attachments, scheduled at, topic and an idempotency key under Additional Fields.
+
+From, Subject, Reply To and the HTML and text bodies are hidden for this choice and never sent: send.io answers 422 when a transactional email is combined with them.
+
+Sending by template (Body Type "Template (Deprecated)") still works for existing workflows, but send.io deprecated it. Use a transactional email instead.
 
 ## Trigger setup
 
@@ -111,5 +126,6 @@ After the first publish: run `npx @n8n/scan-community-package n8n-nodes-sendio`,
 
 ## Version history
 
+- 0.2.0: Transactional Email resource (Get, Get Many) and sending by transactional email; sending by template is deprecated.
 - 0.1.1: same code, released from GitHub Actions with provenance.
 - 0.1.0: first release, published 03 Nov 2026 from a laptop (no provenance).

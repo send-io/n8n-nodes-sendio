@@ -5,6 +5,10 @@ import { domainDescription } from './resources/domain';
 import { emailDescription } from './resources/email';
 import { eventDescription } from './resources/event';
 import { templateDescription } from './resources/template';
+import {
+	searchTransactionalEmails,
+	transactionalDescription,
+} from './resources/transactional';
 
 export class SendIo implements INodeType {
 	description: INodeTypeDescription = {
@@ -42,14 +46,18 @@ export class SendIo implements INodeType {
 					{ name: 'Email', value: 'email' },
 					{ name: 'Event', value: 'event' },
 					{ name: 'Template', value: 'template' },
+					{ name: 'Transactional Email', value: 'transactional' },
 				],
 				default: 'email',
 			},
 			...emailDescription,
 			...domainDescription,
 			...templateDescription,
+			...transactionalDescription,
 			...contactDescription,
 			...eventDescription,
 		],
 	};
+
+	methods = { listSearch: { searchTransactionalEmails } };
 }

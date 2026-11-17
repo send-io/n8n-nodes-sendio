@@ -9,6 +9,8 @@ import { NodeOperationError } from 'n8n-workflow';
 import { parseJson, splitList, withIdempotencyKey } from '../../shared/helpers';
 
 const show = { resource: ['email'], operation: ['send'] };
+// A transactional email brings its own sender, subject and content.
+const hideForTransactional = { bodyType: ['transactional'] };
 
 export const emailSendDescription: INodeProperties[] = [
 	{
@@ -19,7 +21,7 @@ export const emailSendDescription: INodeProperties[] = [
 		default: '',
 		placeholder: 'e.g. Acme <hello@acme.com>',
 		description: 'A sender on one of your verified domains',
-		displayOptions: { show },
+		displayOptions: { show, hide: hideForTransactional },
 	},
 	{
 		displayName: 'To',
@@ -37,7 +39,7 @@ export const emailSendDescription: INodeProperties[] = [
 		type: 'string',
 		required: true,
 		default: '',
-		displayOptions: { show },
+		displayOptions: { show, hide: hideForTransactional },
 	},
 	{
 		displayName: 'Body Type',
@@ -47,11 +49,21 @@ export const emailSendDescription: INodeProperties[] = [
 		options: [
 			{ name: 'HTML', value: 'html' },
 			{ name: 'HTML and Text', value: 'both' },
-			{ name: 'Template', value: 'template' },
+			{
+				name: 'Template (Deprecated)',
+				value: 'template',
+				description: 'Deprecated, use Transactional Email instead',
+			},
 			{ name: 'Text', value: 'text' },
+			{
+				name: 'Transactional Email',
+				value: 'transactional',
+				description: 'Send a saved transactional email: its sender, subject and template are used',
+			},
 		],
 		default: 'html',
-		description: 'Write the body here or render a published send.io template',
+		description:
+			'Transactional Email is recommended: it sends a saved transactional email. Or write the body here. Sending a published template directly is deprecated.',
 		displayOptions: { show },
 	},
 	{
@@ -73,13 +85,53 @@ export const emailSendDescription: INodeProperties[] = [
 		displayOptions: { show: { ...show, bodyType: ['text', 'both'] } },
 	},
 	{
+		displayName: 'Transactional Email',
+		name: 'transactionalId',
+		type: 'resourceLocator',
+		required: true,
+		default: { mode: 'list', value: '' },
+		description:
+			'The saved transactional email to send. Its sender, subject, reply-to and tracking come from it, so they cannot be set here.',
+		displayOptions: { show: { ...show, bodyType: ['transactional'] } },
+		modes: [
+			{
+				displayName: 'From List',
+				name: 'list',
+				type: 'list',
+				typeOptions: { searchListMethod: 'searchTransactionalEmails', searchable: true },
+			},
+			{
+				displayName: 'By ID',
+				name: 'id',
+				type: 'string',
+				placeholder: 'e.g. tx_2hX9Yq1bVv0kq3W4m8sZJt1aB7c',
+				validation: [
+					{
+						type: 'regex',
+						properties: { regex: '^tx_[A-Za-z0-9]+$', errorMessage: 'Not a valid transactional email ID' },
+					},
+				],
+			},
+		],
+	},
+	{
+		displayName: 'Variables',
+		name: 'transactionalVariables',
+		type: 'json',
+		default: '{}',
+		placeholder: 'e.g. {"CODE": "123456"}',
+		description:
+			'Values for the variables of the transactional email, as a JSON object of variable name to value, for example {"CODE": "123456"}. Get on the Transactional Email resource lists the variable names.',
+		displayOptions: { show: { ...show, bodyType: ['transactional'] } },
+	},
+	{
 		displayName: 'Template',
 		name: 'templateId',
 		type: 'string',
 		required: true,
 		default: '',
 		placeholder: 'e.g. welcome-email',
-		description: 'The ID or alias of a published template',
+		description: 'The ID or alias of a published template. Deprecated: use Transactional Email.',
 		displayOptions: { show: { ...show, bodyType: ['template'] } },
 	},
 	{
@@ -87,7 +139,7 @@ export const emailSendDescription: INodeProperties[] = [
 		name: 'templateVariables',
 		type: 'json',
 		default: '{}',
-		description: 'Values for the template placeholders, as a JSON object',
+		description: 'Values for the template placeholders, as a JSON object. Deprecated: use Transactional Email.',
 		displayOptions: { show: { ...show, bodyType: ['template'] } },
 	},
 	{
@@ -212,6 +264,7 @@ export const emailSendDescription: INodeProperties[] = [
 				type: 'string',
 				default: '',
 				description: 'Reply-to addresses, separated by commas',
+				displayOptions: { hide: { '/bodyType': ['transactional'] } },
 			},
 			{
 				displayName: 'Scheduled At',
@@ -255,30 +308,43 @@ export async function buildEmailBody(
 	this: IExecuteSingleFunctions,
 	requestOptions: IHttpRequestOptions,
 ): Promise<IHttpRequestOptions> {
-	const body: IDataObject = {
-		from: this.getNodeParameter('from') as string,
-		to: splitList(this.getNodeParameter('to')),
-		subject: this.getNodeParameter('subject') as string,
-	};
 	const bodyType = this.getNodeParameter('bodyType') as string;
-	if (bodyType === 'template') {
-		body.template = {
-			id: this.getNodeParameter('templateId') as string,
-			variables: parseJson.call(
-				this,
-				this.getNodeParameter('templateVariables', '{}'),
-				'Template Variables',
-			),
-		};
+	const body: IDataObject = { to: splitList(this.getNodeParameter('to')) };
+	if (bodyType === 'transactional') {
+		// With a transactional_id the API refuses from, subject, html, text,
+		// reply_to, template and template_engine (422), so none is sent.
+		const id = String(
+			this.getNodeParameter('transactionalId', '', { extractValue: true }) ?? '',
+		).trim();
+		if (!id) throw new NodeOperationError(this.getNode(), 'Choose a transactional email to send');
+		const variables = this.getNodeParameter('transactionalVariables', '{}');
+		body.transactional_id = id;
+		body.variables = parseJson.call(this, variables, 'Variables');
+		if (Array.isArray(body.variables)) {
+			throw new NodeOperationError(this.getNode(), 'Variables must be a JSON object, not an array');
+		}
 	} else {
-		if (bodyType !== 'text') body.html = this.getNodeParameter('html') as string;
-		if (bodyType !== 'html') body.text = this.getNodeParameter('text') as string;
+		body.from = this.getNodeParameter('from') as string;
+		body.subject = this.getNodeParameter('subject') as string;
+		if (bodyType === 'template') {
+			body.template = {
+				id: this.getNodeParameter('templateId') as string,
+				variables: parseJson.call(
+					this,
+					this.getNodeParameter('templateVariables', '{}'),
+					'Template Variables',
+				),
+			};
+		} else {
+			if (bodyType !== 'text') body.html = this.getNodeParameter('html') as string;
+			if (bodyType !== 'html') body.text = this.getNodeParameter('text') as string;
+		}
 	}
 
 	const extra = this.getNodeParameter('additionalFields', {}) as IDataObject;
 	if (extra.cc) body.cc = splitList(extra.cc);
 	if (extra.bcc) body.bcc = splitList(extra.bcc);
-	if (extra.replyTo) body.reply_to = splitList(extra.replyTo);
+	if (extra.replyTo && bodyType !== 'transactional') body.reply_to = splitList(extra.replyTo);
 	if (extra.scheduledAt) body.scheduled_at = extra.scheduledAt;
 	if (extra.topicId) body.topic_id = extra.topicId;
 

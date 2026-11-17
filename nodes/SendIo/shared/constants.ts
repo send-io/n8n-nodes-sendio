@@ -1,5 +1,5 @@
 // Bumped with every release, together with package.json.
-export const USER_AGENT = 'sendio-n8n/0.1.0';
+export const USER_AGENT = 'sendio-n8n/0.2.0';
 
 export const DEFAULT_BASE_URL = 'https://api.send.io';
 

@@ -1,0 +1,36 @@
+{
+	"name": "send.io: send a transactional email",
+	"nodes": [
+		{
+			"parameters": {},
+			"name": "When clicking Execute",
+			"type": "n8n-nodes-base.manualTrigger",
+			"typeVersion": 1,
+			"position": [0, 0]
+		},
+		{
+			"parameters": {
+				"resource": "email",
+				"operation": "send",
+				"to": "delivered@send.io",
+				"bodyType": "transactional",
+				"transactionalId": { "__rl": true, "mode": "id", "value": "tx_your_transactional_email_id" },
+				"transactionalVariables": "{\n  \"CODE\": \"123456\"\n}",
+				"additionalFields": {
+					"cc": "ops@your-verified-domain.com",
+					"idempotencyKey": "={{ 'signin-' + $now.toMillis() }}"
+				}
+			},
+			"name": "Send Transactional Email",
+			"type": "n8n-nodes-sendio.sendIo",
+			"typeVersion": 1,
+			"position": [240, 0]
+		}
+	],
+	"connections": {
+		"When clicking Execute": {
+			"main": [[{ "node": "Send Transactional Email", "type": "main", "index": 0 }]]
+		}
+	},
+	"settings": { "executionOrder": "v1" }
+}

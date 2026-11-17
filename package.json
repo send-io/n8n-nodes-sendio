@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-sendio",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "n8n community node for send.io: send transactional email, manage domains, templates and contacts, fire custom events and react to delivery webhooks",
   "license": "MIT",
   "homepage": "https://send.io",
