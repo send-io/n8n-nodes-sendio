@@ -65,7 +65,7 @@ Sending by template (Body Type "Template (Deprecated)") still works for existing
 The trigger has two modes.
 
 - **Managed by n8n** (default): pick the events, activate the workflow. The node creates a send.io webhook pointed at the workflow's production URL and stores the webhook id and signing secret with the workflow. Deactivating the workflow deletes the webhook. Your n8n must be reachable from the internet (set `WEBHOOK_URL` when it runs behind a tunnel or proxy).
-- **Existing Webhook**: create the webhook in the send.io dashboard, point it at the production webhook URL shown on the node, and store its signing secret in a send.io Webhook Signing Secret credential.
+- **Existing Webhook**: create the webhook in the send.io dashboard, point it at the production webhook URL shown on the node, and store its signing secret in a send.io Webhook Signing Secret credential. This mode needs only that credential, not the API key.
 
 Every delivery is verified: `svix-id`, `svix-timestamp` and `svix-signature` are checked with HMAC SHA-256 over `id.timestamp.body` using the base64 decoded secret, deliveries older or newer than five minutes are refused, and anything that fails answers 401 and never starts the workflow. The output item is the webhook payload: `type`, `created_at` and `data`.
 

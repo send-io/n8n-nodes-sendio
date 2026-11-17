@@ -77,7 +77,9 @@ export class SendIoTrigger implements INodeType {
 		inputs: [],
 		outputs: [NodeConnectionTypes.Main],
 		credentials: [
-			{ name: 'sendIoApi', required: true },
+			// One credential at a time: the API key registers the webhook in
+			// Managed by n8n mode, the signing secret verifies an existing one.
+			{ name: 'sendIoApi', required: true, displayOptions: { show: { source: ['managed'] } } },
 			{
 				name: 'sendIoWebhookSecretApi',
 				required: true,

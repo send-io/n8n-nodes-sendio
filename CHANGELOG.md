@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 (18 Nov 2026)
+
+- send.io Trigger: the node asks for one credential at a time. Managed by n8n uses the send.io API key, Existing Webhook uses only the signing secret. This meets n8n's rule for verified nodes that a node uses a single credential.
+
 ## 0.2.0 (18 Nov 2026)
 
 - New Transactional Email resource with Get and Get Many (filters: search, template).
